@@ -12,6 +12,7 @@ from dbt_checkpoint.tracking import dbtCheckpointTracking
 from dbt_checkpoint.utils import (
     JsonOpenError,
     add_default_args,
+    get_config_file,
     get_dbt_manifest,
     red,
     yellow,
@@ -57,13 +58,14 @@ def add_space_to_source_ref(sql: str) -> str:
 
 
 def has_table_name(
-    sql: str, filename: str, dotless: Optional[bool] = False, dialect: Optional[str] = "ansi"
+    sql: str, filename: str, dotless: Optional[bool] = False, dialect: Optional[str] = "ansi", project_dir: Optional[str] = None
 ) -> Tuple[int, Set[str]]:
     status_code = 0
     config = FluffConfig(overrides={
         "dialect": dialect,
         # "ignore_templated_areas": True,
         "templater": "dbt",
+        "templater.dbt.project_dir": project_dir,
     })
     parsed_sql = sqlfluff.parse(sql, config=config)
     table_names = set(parsed_sql.tree.get_table_references())
@@ -80,6 +82,9 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     args = parser.parse_args(argv)
     status_code = 0
 
+    dbt_checkpoint_config = get_config_file(args.config)
+    config_project_dir = dbt_checkpoint_config.get("dbt-project-dir")
+
     try:
         manifest = get_dbt_manifest(args)
     except JsonOpenError as e:
@@ -92,7 +97,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     for filename in args.filenames:
         sql = Path(filename).read_text()
         status_code_file, tables = has_table_name(
-            sql, filename, args.ignore_dotless_table
+            sql, filename, args.ignore_dotless_table, config_project_dir
         )
         if status_code_file:
             result = "\n- ".join(list(tables))  # pragma: no mutate

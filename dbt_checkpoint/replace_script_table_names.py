@@ -8,7 +8,7 @@ from typing import Any, Dict, Generator, Optional, Sequence, Set, Tuple
 
 from dbt_checkpoint.check_script_has_no_table_name import has_table_name
 from dbt_checkpoint.tracking import dbtCheckpointTracking
-from dbt_checkpoint.utils import JsonOpenError, add_default_args, get_dbt_manifest
+from dbt_checkpoint.utils import JsonOpenError, add_default_args, get_config_file, get_dbt_manifest
 
 
 def get_ref_from_name(
@@ -73,6 +73,10 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
 
     args = parser.parse_args(argv)
 
+    dbt_checkpoint_config = get_config_file(args.config)
+    config_project_dir = dbt_checkpoint_config.get("dbt-project-dir")
+
+
     try:
         manifest = get_dbt_manifest(args)
     except JsonOpenError as e:
@@ -85,7 +89,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     for filename in args.filenames:
         file = Path(filename)
         sql = file.read_text()
-        status_code_file, tables = has_table_name(sql, filename, args.ignore_dotless_table, args.dialect)
+        status_code_file, tables = has_table_name(sql, filename, args.ignore_dotless_table, args.dialect, config_project_dir)
         if status_code_file:
             status_code = status_code_file
             to_replace = itertools.chain(

@@ -61,12 +61,13 @@ def has_table_name(
     sql: str, filename: str, dotless: Optional[bool] = False, dialect: Optional[str] = "ansi", project_dir: Optional[str] = None
 ) -> Tuple[int, Set[str]]:
     status_code = 0
-    config = FluffConfig(overrides={
-        "dialect": dialect,
-        # "ignore_templated_areas": True,
-        "templater": "dbt",
-        "templater.dbt.project_dir": project_dir,
-    })
+    config = FluffConfig.from_string(f"""
+        [sqlfluff]
+        dialect={dialect}
+        templater=dbt
+        [templater.dbt]
+        project_dir={project_dir}
+    """)
     parsed_sql = sqlfluff.parse(sql, config=config)
     table_names = set(parsed_sql.tree.get_table_references())
     return status_code, table_names

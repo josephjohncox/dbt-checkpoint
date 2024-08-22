@@ -98,7 +98,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     for filename in args.filenames:
         sql = Path(filename).read_text()
         status_code_file, tables = has_table_name(
-            sql, filename, args.ignore_dotless_table, config_project_dir
+            sql, filename, args.ignore_dotless_table, dialect=args.dialect, project_dir=config_project_dir
         )
         if status_code_file:
             result = "\n- ".join(list(tables))  # pragma: no mutate

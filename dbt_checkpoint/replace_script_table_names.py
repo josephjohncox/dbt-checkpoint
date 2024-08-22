@@ -89,7 +89,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     for filename in args.filenames:
         file = Path(filename)
         sql = file.read_text()
-        status_code_file, tables = has_table_name(sql, filename, args.ignore_dotless_table, args.dialect, config_project_dir)
+        status_code_file, tables = has_table_name(sql, filename, args.ignore_dotless_table, dialect=args.dialect, project_dir=config_project_dir)
         if status_code_file:
             status_code = status_code_file
             to_replace = itertools.chain(

@@ -68,6 +68,7 @@ def get_unknown_source(tables: Set[str]) -> Generator[Tuple[str, str], None, Non
 def main(argv: Optional[Sequence[str]] = None) -> int:
     parser = argparse.ArgumentParser()
     add_default_args(parser)
+    parser.add_argument("--ignore-dotless-table", action="store_true")
 
     args = parser.parse_args(argv)
 
@@ -83,7 +84,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     for filename in args.filenames:
         file = Path(filename)
         sql = file.read_text()
-        status_code_file, tables = has_table_name(sql, filename)
+        status_code_file, tables = has_table_name(sql, filename, args.ignore_dotless_table)
         if status_code_file:
             status_code = status_code_file
             to_replace = itertools.chain(

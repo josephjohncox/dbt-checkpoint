@@ -56,12 +56,12 @@ def add_space_to_source_ref(sql: str) -> str:
 
 
 def has_table_name(
-    sql: str, filename: str, dotless: Optional[bool] = False
+    sql: str, filename: str, dotless: Optional[bool] = False, dialect: Optional[str] = "ansi"
 ) -> Tuple[int, Set[str]]:
     # not sure if this status code would still be necessary
     status_code = 0
-    parsed_sql = sqlfluff.parse(sql)
-    table_names = set(parsed_sql .tree.get_table_references())
+    parsed_sql = sqlfluff.parse(sql, dialect=dialect)
+    table_names = set(parsed_sql.tree.get_table_references())
     return status_code, table_names
 
 
@@ -70,6 +70,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     add_default_args(parser)
 
     parser.add_argument("--ignore-dotless-table", action="store_true")
+    parser.add_argument("--dialect", type=str, default="ansi")
 
     args = parser.parse_args(argv)
     status_code = 0

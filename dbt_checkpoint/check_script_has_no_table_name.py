@@ -5,6 +5,7 @@ import time
 from pathlib import Path
 from typing import Generator, Optional, Sequence, Set, Tuple
 import sqlfluff
+from sqlfluff.core import FluffConfig
 
 
 from dbt_checkpoint.tracking import dbtCheckpointTracking
@@ -58,9 +59,13 @@ def add_space_to_source_ref(sql: str) -> str:
 def has_table_name(
     sql: str, filename: str, dotless: Optional[bool] = False, dialect: Optional[str] = "ansi"
 ) -> Tuple[int, Set[str]]:
-    # not sure if this status code would still be necessary
     status_code = 0
-    parsed_sql = sqlfluff.parse(sql, dialect=dialect)
+    config = FluffConfig(overrides={
+        "dialect": dialect,
+        # "ignore_templated_areas": True,
+        "templater": "dbt",
+    })
+    parsed_sql = sqlfluff.parse(sql, config=config)
     table_names = set(parsed_sql.tree.get_table_references())
     return status_code, table_names
 

@@ -4,6 +4,8 @@ import re
 import time
 from pathlib import Path
 from typing import Generator, Optional, Sequence, Set, Tuple
+import sqlfluff
+
 
 from dbt_checkpoint.tracking import dbtCheckpointTracking
 from dbt_checkpoint.utils import (
@@ -56,30 +58,10 @@ def add_space_to_source_ref(sql: str) -> str:
 def has_table_name(
     sql: str, filename: str, dotless: Optional[bool] = False
 ) -> Tuple[int, Set[str]]:
+    # not sure if this status code would still be necessary
     status_code = 0
-    sql_clean = replace_comments(sql)
-    sql_clean = add_space_to_parenthesis(sql_clean)
-    sql_clean = add_space_to_braces(sql_clean)
-    sql_clean = add_space_to_source_ref(sql_clean)
-    sql_split = re.split(REGEX_SPLIT, sql_clean)
-    tables = set()
-    cte = set()
-
-    for prev, cur, nxt in prev_cur_next_iter(sql_split):
-        if prev in ["from", "join"] and cur not in IGNORE_WORDS:
-            table = cur.lower().strip().replace(",", "") if cur else cur
-            if dotless and "." not in table:
-                pass
-            else:
-                tables.add(table)
-        if (
-            cur.lower() == "as" and nxt and nxt[0] == "(" and prev not in IGNORE_WORDS
-        ):  # pragma: no mutate
-            cte.add(prev.lower() if prev else prev)
-
-    table_names = tables.difference(cte)
-    if table_names:
-        status_code = 1
+    parsed_sql = sqlfluff.parse(sql)
+    table_names = set(parsed_sql .tree.get_table_references())
     return status_code, table_names
 
 

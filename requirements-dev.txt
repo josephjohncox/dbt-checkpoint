@@ -4,3 +4,4 @@ mutmut
 pre-commit
 mixpanel
 pyyaml
+sqlfluff
